@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using HTML_Extractor;
@@ -16,14 +17,16 @@ namespace Webscraper
     public partial class Form1 : Form
     {
         private const string imagesFoundText = "Images found: ";
-        private List<string> imagesLinksList;
-        private string url;
+        private const string selectedItemsCountText = "Selected URLS count: ";
 
+        private List<string> imagesURLSList;
+        private string inputURL;
+        
         public Form1()
         {
             InitializeComponent();
-
-            label2.Text = imagesFoundText + "0";
+            imagesFoundLabel.Text = imagesFoundText + "0";
+            selectedItemsCountLabel.Text = selectedItemsCountText + "0";
         }
 
         private void groupBox1_Enter(object sender, EventArgs e)
@@ -44,85 +47,137 @@ namespace Webscraper
 
             if (!Uri.IsWellFormedUriString(input, UriKind.Absolute))
             {
-                MessageBox.Show("The Url must be sturctured correct", "Warning",
+                MessageBox.Show("The Url must be structured correctly", "Warning",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 textBox1.Text = "";
                 return;
             }
-            url = input;
+            inputURL = input;
             HtmlExtract extract = new HtmlExtract();
-            imagesLinksList = extract.CallURL(input).Result;
-            label2.Text = imagesFoundText + imagesLinksList.Count.ToString();
+            button1.Enabled = false;
 
-            if (imagesLinksList.Count <= 0)
+            imagesURLSList = extract.CallURL(input).Result;
+
+            button1.Enabled = true;
+            imagesFoundLabel.Text = imagesFoundText + imagesURLSList.Count.ToString();
+
+            if (imagesURLSList.Count <= 0)
             {
-                MessageBox.Show("No Pictures", "Found Pics", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("No Pictures found", "Found Pics", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
                 groupBox1.Visible = true;
-                foreach (var item in imagesLinksList)
+                foreach (var item in imagesURLSList)
                 {
-                    listBox1.Items.Add(input + item + Environment.NewLine);
+                    listBox1.Items.Add(item + Environment.NewLine);
                 }
             }
         }
 
-        private void saveToFolderButton_Click(object sender, EventArgs e)
+        private void ListBox1_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
         {
-            if (imagesLinksList != null)
+            if (e.Control && e.KeyCode == Keys.C)
             {
-
-                DialogResult result = folderBrowserDialog1.ShowDialog();
-                //Task[] tasks = new Task[imagesLinksList.Count()];
-
-                if (result == DialogResult.OK)
-                {
-                    string path = folderBrowserDialog1.SelectedPath;
-
-                    TestAsync(path);
-                }
+                System.Text.StringBuilder copy_buffer = new System.Text.StringBuilder();
+                foreach (object item in listBox1.SelectedItems)
+                    copy_buffer.AppendLine(item.ToString());
+                if (copy_buffer.Length > 0)
+                    Clipboard.SetDataObject(copy_buffer.ToString());
             }
         }
 
-        private void Output(string path)
+        private async void saveToFolderButton_Click(object sender, EventArgs e)
         {
-            Console.WriteLine(path);
-        }
-        //public System.Threading.Tasks.Task<byte[]> GetByteArrayAsync (Uri? requestUri);
-        private async void TestAsync(string path)
-        {
-            IEnumerable<Task> urlTasks = imagesLinksList.Select((url, index) =>
+            if (imagesURLSList == null)
             {
-                if (index >= 5)
-                    return null;
+                MessageBox.Show("URL is missing!", "Warning!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-                WebClient wc = new WebClient();
-                string filePath = string.Format("{0}image-{1}.png", path, index);
+            IEnumerable<string> selectedURLS = listBox1.SelectedItems?.Cast<string>();
+            if (selectedURLS == null || selectedURLS.Count() == 0)
+            {
+                selectedURLS = listBox1.Items.Cast<string>();
+            }
 
-                //ha en kontrollsats - använda regex? 
-                var downloadTask = wc.DownloadFileTaskAsync("https:" + url, filePath);
-                Output(path);
+            DialogResult result = folderBrowserDialog1.ShowDialog(this);
+            this.Enabled = false;
 
-                return downloadTask;
-            });
+            if (result == DialogResult.OK)
+            {
+                string path = folderBrowserDialog1.SelectedPath;
 
-            urlTasks = urlTasks.Take(urlTasks.Count() - 3);
+                List<Task> downloadFileTasks = new List<Task>(); // lista med alla tasks som ska ladda ner bilder askynkront
 
-            //foreach (var fileName in imagesLinksList)
-            //{
-            //    WebClient wClient = new WebClient();
-            //    string filePath = string.Format("{0}image-{1}.jpg", path, index);
+                for (int i = 0; i < selectedURLS.Count(); i++)
+                {
+                    string imageURL = selectedURLS.ElementAt(i);
 
-            //    using (File.Create(filePath = path + $"img{index}"))
-            //    {
-            //        Task task = wClient.DownloadFileTaskAsync("https:" + fileName, filePath);
-            //        Output(path);
-            //        tasks[index++] = task.ContinueWith(t => Output(filePath));
-            //    }
-            //}
-            await Task.WhenAll(urlTasks);
-            MessageBox.Show("Done");
+                    var wc = new WebClient();
+                    {
+                        bool isAnotherDomain = imageURL.Contains("//"); // double slashes indikerar att bilden hämtas från en annan domän
+                        bool hasHTTPS = imageURL.Contains("https:");
+                        bool hasHTTP = imageURL.Contains("http:");
+
+                        string url = null;
+                        if (isAnotherDomain)
+                        {
+                            if (hasHTTPS || hasHTTP)
+                                url = imageURL;
+                            else
+                                url = "https:" + imageURL;
+                        }
+                        else
+                            url = inputURL + imageURL;
+
+                        Match formatMatch = Regex.Match(url, @"\.(bmp|png|gif|jpg|jpeg)", 
+                            RegexOptions.IgnoreCase); // hitta bildformatet med regex.
+                        
+                        if (formatMatch.Success)
+                        {
+                            string fileNameWOExt;
+                            int counter = 1;
+                            string fileWOExt;
+                            string[] fileNamesWOExtensions = Directory.GetFiles(path)
+                                .Select(s => Path.GetFileNameWithoutExtension(s)).ToArray(); // hämtar alla filnamn utan format i destinationsmappen.
+
+                            do
+                            {
+                                fileNameWOExt = $"img{i + counter}";
+                                counter++;
+                            } while (Array.Exists(fileNamesWOExtensions, s => s.Equals(fileNameWOExt, StringComparison.InvariantCultureIgnoreCase)));
+
+                            Task task = wc.DownloadFileTaskAsync(url, $"{path}\\{fileNameWOExt}{formatMatch.Value}"); // ladda ner bildfilen asynkront.
+                            await task;
+                            downloadFileTasks.Add(task);
+                        }
+                    }
+                }
+                await Task.WhenAll(downloadFileTasks);
+
+                MessageBox.Show("Done downloading!");
+                this.Enabled = true;
+            }
+        }
+
+        private void listBox1_SelectedValueChanged(object sender, EventArgs e)
+        {
+            selectedItemsCountLabel.Text = selectedItemsCountText + listBox1.SelectedItems.Count.ToString();
+        }
+
+        private void clearListBox1Button_Click(object sender, EventArgs e)
+        {
+            listBox1.Items.Clear();
+            imagesFoundLabel.Text = imagesFoundText + "0";
+            selectedItemsCountLabel.Text = selectedItemsCountText + "0";
+        }
+
+        private void clearChoicesButton_Click(object sender, EventArgs e)
+        {
+            listBox1.SelectedIndex = -1;         
+            selectedItemsCountLabel.Text = selectedItemsCountText + "0";
+            
         }
     }
 }
