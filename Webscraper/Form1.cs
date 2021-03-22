@@ -17,14 +17,16 @@ namespace Webscraper
     public partial class Form1 : Form
     {
         private const string imagesFoundText = "Images found: ";
+        private const string selectedItemsCountText = "Selected URLS count: ";
+
         private List<string> imagesURLSList;
         private string inputURL;
-
+        
         public Form1()
         {
             InitializeComponent();
-
-            label2.Text = imagesFoundText + "0";
+            imagesFoundLabel.Text = imagesFoundText + "0";
+            selectedItemsCountLabel.Text = selectedItemsCountText + "0";
         }
 
         private void groupBox1_Enter(object sender, EventArgs e)
@@ -45,26 +47,30 @@ namespace Webscraper
 
             if (!Uri.IsWellFormedUriString(input, UriKind.Absolute))
             {
-                MessageBox.Show("The Url must be sturctured correct", "Warning",
+                MessageBox.Show("The Url must be structured correctly", "Warning",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 textBox1.Text = "";
                 return;
             }
             inputURL = input;
             HtmlExtract extract = new HtmlExtract();
+            button1.Enabled = false;
+
             imagesURLSList = extract.CallURL(input).Result;
-            label2.Text = imagesFoundText + imagesURLSList.Count.ToString();
+
+            button1.Enabled = true;
+            imagesFoundLabel.Text = imagesFoundText + imagesURLSList.Count.ToString();
 
             if (imagesURLSList.Count <= 0)
             {
-                MessageBox.Show("No Pictures", "Found Pics", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("No Pictures found", "Found Pics", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
                 groupBox1.Visible = true;
                 foreach (var item in imagesURLSList)
                 {
-                    listBox1.Items.Add(input + item + Environment.NewLine);
+                    listBox1.Items.Add(item + Environment.NewLine);
                 }
             }
         }
@@ -83,48 +89,96 @@ namespace Webscraper
 
         private async void saveToFolderButton_Click(object sender, EventArgs e)
         {
-            if (imagesURLSList != null)
+            if (imagesURLSList == null)
             {
-                DialogResult result = folderBrowserDialog1.ShowDialog();
-                if (result == DialogResult.OK)
-                {            
-                    string path = folderBrowserDialog1.SelectedPath;
+                MessageBox.Show("URL is missing!", "Warning!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-                    List<Task> downloadFileTasks = new List<Task>(); // lista med alla tasks som ska ladda ner bilder askynkront
+            IEnumerable<string> selectedURLS = listBox1.SelectedItems?.Cast<string>();
+            if (selectedURLS == null || selectedURLS.Count() == 0)
+            {
+                selectedURLS = listBox1.Items.Cast<string>();
+            }
 
-                    for (int i = 0; i < imagesURLSList.Count(); i++)
+            DialogResult result = folderBrowserDialog1.ShowDialog(this);
+            this.Enabled = false;
+
+            if (result == DialogResult.OK)
+            {
+                string path = folderBrowserDialog1.SelectedPath;
+
+                List<Task> downloadFileTasks = new List<Task>(); // lista med alla tasks som ska ladda ner bilder askynkront
+
+                for (int i = 0; i < selectedURLS.Count(); i++)
+                {
+                    string imageURL = selectedURLS.ElementAt(i);
+
+                    var wc = new WebClient();
                     {
-                        string imageURL = imagesURLSList[i];
+                        bool isAnotherDomain = imageURL.Contains("//"); // double slashes indikerar att bilden hämtas från en annan domän
+                        bool hasHTTPS = imageURL.Contains("https:");
+                        bool hasHTTP = imageURL.Contains("http:");
 
-                        var wc = new WebClient();
+                        string url = null;
+                        if (isAnotherDomain)
                         {
-                            bool isAnotherDomain = imageURL.Contains("//"); // double slashes indikerar att bilden hämtas från en annan domän
-                            string url = (isAnotherDomain ? "https:" + imageURL : inputURL); // bestäm vilken domän bilden ska hämtas ifrån
-                            Match formatMatch = Regex.Match(url, @"\.(bmp|png|gif|jpg|jpeg)", RegexOptions.IgnoreCase); // hitta bildformatet med regex
+                            if (hasHTTPS || hasHTTP)
+                                url = imageURL;
+                            else
+                                url = "https:" + imageURL;
+                        }
+                        else
+                            url = inputURL + imageURL;
 
-                            if (formatMatch.Success)
+                        Match formatMatch = Regex.Match(url, @"\.(bmp|png|gif|jpg|jpeg)", 
+                            RegexOptions.IgnoreCase); // hitta bildformatet med regex.
+                        
+                        if (formatMatch.Success)
+                        {
+                            string fileNameWOExt;
+                            int counter = 1;
+                            string fileWOExt;
+                            string[] fileNamesWOExtensions = Directory.GetFiles(path)
+                                .Select(s => Path.GetFileNameWithoutExtension(s)).ToArray(); // hämtar alla filnamn utan format i destinationsmappen.
+
+                            do
                             {
-                                Task task = wc.DownloadFileTaskAsync(url, path + $"\\img{i}{formatMatch.Value}"); // ladda ner bildfilen asynkront
+                                fileNameWOExt = $"img{i + counter}";
+                                counter++;
+                            } while (Array.Exists(fileNamesWOExtensions, s => s.Equals(fileNameWOExt, StringComparison.InvariantCultureIgnoreCase)));
 
-                                await task;
-
-                                downloadFileTasks.Add(task);
-                            }
+                            Task task = wc.DownloadFileTaskAsync(url, $"{path}\\{fileNameWOExt}{formatMatch.Value}"); // ladda ner bildfilen asynkront.
+                            await task;
+                            downloadFileTasks.Add(task);
                         }
                     }
-                    Task completionTask = Task.WhenAll(downloadFileTasks);
-
-                    completionTask.Wait();
-
-                    MessageBox.Show("Done");
                 }
+                await Task.WhenAll(downloadFileTasks);
 
-            
+                MessageBox.Show("Done downloading!");
+                this.Enabled = true;
             }
         }
+
+        private void listBox1_SelectedValueChanged(object sender, EventArgs e)
+        {
+            selectedItemsCountLabel.Text = selectedItemsCountText + listBox1.SelectedItems.Count.ToString();
+        }
+
+        private void clearListBox1Button_Click(object sender, EventArgs e)
+        {
+            listBox1.Items.Clear();
+            imagesFoundLabel.Text = imagesFoundText + "0";
+            selectedItemsCountLabel.Text = selectedItemsCountText + "0";
+        }
+
+        private void clearChoicesButton_Click(object sender, EventArgs e)
+        {
+            listBox1.SelectedIndex = -1;         
+            selectedItemsCountLabel.Text = selectedItemsCountText + "0";
+            
+        }
     }
-
-
-    
 }
 

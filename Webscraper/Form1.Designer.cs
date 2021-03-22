@@ -31,23 +31,27 @@ namespace Webscraper
         {
             this.components = new System.ComponentModel.Container();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.clearChoicesButton = new System.Windows.Forms.Button();
+            this.clearListBox1Button = new System.Windows.Forms.Button();
+            this.selectedItemsCountLabel = new System.Windows.Forms.Label();
             this.saveToFolderButton = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
+            this.imagesFoundLabel = new System.Windows.Forms.Label();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.label1 = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.button1 = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
-            this.textBox2 = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.clearChoicesButton);
+            this.groupBox1.Controls.Add(this.clearListBox1Button);
+            this.groupBox1.Controls.Add(this.selectedItemsCountLabel);
             this.groupBox1.Controls.Add(this.saveToFolderButton);
-            this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Controls.Add(this.listBox1);
+            this.groupBox1.Controls.Add(this.imagesFoundLabel);
             this.groupBox1.Location = new System.Drawing.Point(8, 129);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.groupBox1.Name = "groupBox1";
@@ -57,6 +61,35 @@ namespace Webscraper
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Websites";
             this.groupBox1.Enter += new System.EventHandler(this.groupBox1_Enter);
+            // 
+            // clearChoicesButton
+            // 
+            this.clearChoicesButton.Location = new System.Drawing.Point(359, 366);
+            this.clearChoicesButton.Name = "clearChoicesButton";
+            this.clearChoicesButton.Size = new System.Drawing.Size(115, 29);
+            this.clearChoicesButton.TabIndex = 5;
+            this.clearChoicesButton.Text = "Clear choices";
+            this.clearChoicesButton.UseVisualStyleBackColor = true;
+            this.clearChoicesButton.Click += new System.EventHandler(this.clearChoicesButton_Click);
+            // 
+            // clearListBox1Button
+            // 
+            this.clearListBox1Button.Location = new System.Drawing.Point(203, 367);
+            this.clearListBox1Button.Name = "clearListBox1Button";
+            this.clearListBox1Button.Size = new System.Drawing.Size(94, 29);
+            this.clearListBox1Button.TabIndex = 4;
+            this.clearListBox1Button.Text = "Clear all";
+            this.clearListBox1Button.UseVisualStyleBackColor = true;
+            this.clearListBox1Button.Click += new System.EventHandler(this.clearListBox1Button_Click);
+            // 
+            // selectedItemsCountLabel
+            // 
+            this.selectedItemsCountLabel.AutoSize = true;
+            this.selectedItemsCountLabel.Location = new System.Drawing.Point(24, 396);
+            this.selectedItemsCountLabel.Name = "selectedItemsCountLabel";
+            this.selectedItemsCountLabel.Size = new System.Drawing.Size(152, 20);
+            this.selectedItemsCountLabel.TabIndex = 3;
+            this.selectedItemsCountLabel.Text = "Selected URLS count: ";
             // 
             // saveToFolderButton
             // 
@@ -69,26 +102,28 @@ namespace Webscraper
             this.saveToFolderButton.UseVisualStyleBackColor = true;
             this.saveToFolderButton.Click += new System.EventHandler(this.saveToFolderButton_Click);
             // 
-            // label2
+            // imagesFoundLabel
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(24, 396);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(107, 20);
-            this.label2.TabIndex = 1;
-            this.label2.Text = "Images found: ";
+            this.imagesFoundLabel.AutoSize = true;
+            this.imagesFoundLabel.Location = new System.Drawing.Point(24, 376);
+            this.imagesFoundLabel.Name = "imagesFoundLabel";
+            this.imagesFoundLabel.Size = new System.Drawing.Size(107, 20);
+            this.imagesFoundLabel.TabIndex = 1;
+            this.imagesFoundLabel.Text = "Images found: ";
             // 
             // listBox1
             // 
             this.listBox1.FormattingEnabled = true;
             this.listBox1.HorizontalScrollbar = true;
             this.listBox1.ItemHeight = 20;
-            this.listBox1.Location = new System.Drawing.Point(24, 29);
+            this.listBox1.Location = new System.Drawing.Point(32, 157);
             this.listBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.listBox1.Name = "listBox1";
             this.listBox1.ScrollAlwaysVisible = true;
+            this.listBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.listBox1.Size = new System.Drawing.Size(806, 324);
             this.listBox1.TabIndex = 0;
+            this.listBox1.SelectedValueChanged += new System.EventHandler(this.listBox1_SelectedValueChanged);
             this.listBox1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ListBox1_KeyDown);
             // 
             // label1
@@ -120,22 +155,15 @@ namespace Webscraper
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // textBox2
-            // 
-            this.textBox2.Location = new System.Drawing.Point(175, 88);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(125, 27);
-            this.textBox2.TabIndex = 6;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(917, 600);
-            this.Controls.Add(this.textBox2);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.label1);
+            this.Controls.Add(this.listBox1);
             this.Controls.Add(this.groupBox1);
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "Form1";
@@ -154,11 +182,13 @@ namespace Webscraper
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label imagesFoundLabel;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button saveToFolderButton;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.Label selectedItemsCountLabel;
+        private System.Windows.Forms.Button clearListBox1Button;
+        private System.Windows.Forms.Button clearChoicesButton;
     }
 }
 
