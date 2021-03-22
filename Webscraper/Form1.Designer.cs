@@ -89,6 +89,7 @@ namespace Webscraper
             this.listBox1.ScrollAlwaysVisible = true;
             this.listBox1.Size = new System.Drawing.Size(806, 324);
             this.listBox1.TabIndex = 0;
+            this.listBox1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ListBox1_KeyDown);
             // 
             // label1
             // 
