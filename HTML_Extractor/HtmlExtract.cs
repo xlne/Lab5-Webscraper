@@ -20,22 +20,45 @@ namespace HTML_Extractor
             HttpResponseMessage response = await _client.GetAsync(url)
                 .ConfigureAwait(false);
             response.EnsureSuccessStatusCode(); // 200 response
-            string resposnebody = await response.Content.ReadAsStringAsync();
-            List<string> listvalues = seperateValues(resposnebody);
+            string responseBody = await response.Content.ReadAsStringAsync();
+            List<string> listvalues = seperateValues(responseBody, url);
             return listvalues;
         }
 
-        public List<string> seperateValues(string s)
+        public List<string> seperateValues(string s, string inputURL)
         {
             List<string> list = new List<string>();
+
             string regexImgSrc = @"<img[^>]*?src\s*=\s*[""']?([^'"" >]+?)[ '""][^>]*?>";
+
             MatchCollection collection =
                 Regex.Matches(s, regexImgSrc, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
             foreach (Match item in collection)
             {
-                string refernce = item.Groups[1].Value;
-                list.Add(refernce);
-            }
+                string imageURL = item.Groups[1].Value;
+
+                bool isAnotherDomain = imageURL.Contains("//"); // double slashes indikerar att bilden hämtas från en annan domän
+                bool hasHTTPS = imageURL.Contains("https:");
+                bool hasHTTP = imageURL.Contains("http:");
+
+                string url = null;
+                if (isAnotherDomain)
+                {
+                    if (hasHTTPS || hasHTTP)
+                        url = imageURL;
+                    else
+                        url = "https:" + imageURL;
+                }
+                else
+                    url = inputURL + imageURL;
+
+                Match formatMatch = Regex.Match(url, @"\.(bmp|png|gif|jpg|jpeg)",
+                            RegexOptions.IgnoreCase);
+
+                if (formatMatch.Success)
+                    list.Add(url);
+            }        
             return list;
         }
 
