@@ -42,6 +42,8 @@ namespace Webscraper
             this.button1 = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.label2 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -52,7 +54,7 @@ namespace Webscraper
             this.groupBox1.Controls.Add(this.selectedItemsCountLabel);
             this.groupBox1.Controls.Add(this.saveToFolderButton);
             this.groupBox1.Controls.Add(this.imagesFoundLabel);
-            this.groupBox1.Location = new System.Drawing.Point(8, 129);
+            this.groupBox1.Location = new System.Drawing.Point(8, 167);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -60,7 +62,6 @@ namespace Webscraper
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Websites";
-            this.groupBox1.Enter += new System.EventHandler(this.groupBox1_Enter);
             // 
             // clearChoicesButton
             // 
@@ -116,7 +117,7 @@ namespace Webscraper
             this.listBox1.FormattingEnabled = true;
             this.listBox1.HorizontalScrollbar = true;
             this.listBox1.ItemHeight = 20;
-            this.listBox1.Location = new System.Drawing.Point(32, 157);
+            this.listBox1.Location = new System.Drawing.Point(32, 195);
             this.listBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.listBox1.Name = "listBox1";
             this.listBox1.ScrollAlwaysVisible = true;
@@ -155,11 +156,29 @@ namespace Webscraper
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // progressBar1
+            // 
+            this.progressBar1.Location = new System.Drawing.Point(32, 131);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(261, 29);
+            this.progressBar1.TabIndex = 6;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(32, 108);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(94, 20);
+            this.label2.TabIndex = 7;
+            this.label2.Text = "Progress bar:";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(917, 600);
+            this.ClientSize = new System.Drawing.Size(916, 630);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.label1);
@@ -167,6 +186,7 @@ namespace Webscraper
             this.Controls.Add(this.groupBox1);
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "Form1";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "WebScraper";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -189,6 +209,8 @@ namespace Webscraper
         private System.Windows.Forms.Label selectedItemsCountLabel;
         private System.Windows.Forms.Button clearListBox1Button;
         private System.Windows.Forms.Button clearChoicesButton;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.Label label2;
     }
 }
 
