@@ -93,8 +93,9 @@ namespace Webscraper
             IEnumerable<string> selectedURLS = listBox1.SelectedItems?.Cast<string>();
             if (selectedURLS == null || selectedURLS.Count() == 0)
             {
-                selectedURLS = listBox1.Items.Cast<string>();
+                selectedURLS = listBox1.Items.Cast<string>().Select(s => s.Replace("\n", "").Replace("\r", ""));
             } //TODO: URL:erna kan bli felformatterade sannolikt pga IEnumerable<string>.Cast funktionen. Måste buggfixas!
+
 
             DialogResult result = folderBrowserDialog1.ShowDialog(this);
             groupBox1.Enabled = false;
@@ -116,7 +117,7 @@ namespace Webscraper
                     string imageURL = selectedURLS.ElementAt(i);
 
                     var wc = new WebClient();
-                    {  
+                    {
                         Match formatMatch = Regex.Match(imageURL, @"\.(bmp|png|gif|jpg|jpeg)",
                             RegexOptions.IgnoreCase); // hitta bildformatet med regex.
 
@@ -132,10 +133,19 @@ namespace Webscraper
                                 fileNameWOExt = $"img{i + counter}";
                                 counter++;
                             } while (Array.Exists(fileNamesWOExtensions, s => s.Equals(fileNameWOExt, StringComparison.InvariantCultureIgnoreCase)));
+                            
+                            Task task;
+                            try
+                            {
+                                task = wc.DownloadFileTaskAsync(imageURL, $"{path}\\{fileNameWOExt}{formatMatch.Value}"); // ladda ner bildfilen asynkront.
 
-                            Task task = wc.DownloadFileTaskAsync(imageURL, $"{path}\\{fileNameWOExt}{formatMatch.Value}"); // ladda ner bildfilen asynkront.
-                            await task;
-                            downloadFileTasks.Add(task);
+                                await task;
+                                downloadFileTasks.Add(task);
+                            }
+                            catch (Exception)
+                            {
+                                
+                            }
                         }
                         progressBar1.PerformStep();
                         label2.Text = $"Downloading images ({i + 1} of {selectedURLS.Count()}";
@@ -146,11 +156,11 @@ namespace Webscraper
                 label2.Text = "Progress bar:";
                 progressBar1.Value = 0;
 
-                MessageBox.Show("Done downloading!");
-
-                groupBox1.Enabled = true;
-                button1.Enabled = true;
+                MessageBox.Show("Done downloading!");  
             }
+
+            groupBox1.Enabled = true;
+            button1.Enabled = true;
         }
 
         private void listBox1_SelectedValueChanged(object sender, EventArgs e)
