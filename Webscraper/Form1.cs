@@ -80,11 +80,18 @@ namespace Webscraper
 
         private async void saveToFolderButton_Click(object sender, EventArgs e)
         {
+            if (listBox1.Items.Count == 0)
+            {
+                MessageBox.Show("List box is empty. Please extract images from an url.", "Warning!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             if (imagesURLSList == null)
             {
                 MessageBox.Show("URL is missing!", "Warning!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+
 
             IEnumerable<string> selectedURLS = listBox1.SelectedItems?.Cast<string>();
             if (selectedURLS == null || selectedURLS.Count() == 0)
