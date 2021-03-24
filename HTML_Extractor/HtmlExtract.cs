@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -12,7 +10,6 @@ namespace HTML_Extractor
     public class HtmlExtract
     {
         private HttpClient _client;
-
 
         public async Task<List<string>> CallURL(String url)
         {
@@ -38,7 +35,8 @@ namespace HTML_Extractor
             {
                 string imageURL = item.Groups[1].Value;
 
-                bool isAnotherDomain = imageURL.Contains("//"); // double slashes indikerar att bilden hämtas från en annan domän
+                //Double slashes indicates that the pictures are downloading from another domain
+                bool isAnotherDomain = imageURL.Contains("//"); 
                 bool hasHTTPS = imageURL.Contains("https:");
                 bool hasHTTP = imageURL.Contains("http:");
 
@@ -58,9 +56,8 @@ namespace HTML_Extractor
 
                 if (formatMatch.Success)
                     list.Add(url);
-            }        
+            }
             return list;
         }
-
     }
 }

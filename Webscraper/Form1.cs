@@ -1,16 +1,13 @@
-﻿using System;
+﻿using HTML_Extractor;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using HTML_Extractor;
 
 namespace Webscraper
 {
@@ -18,7 +15,6 @@ namespace Webscraper
     {
         private const string imagesFoundText = "Images found: ";
         private const string selectedItemsCountText = "Selected URLS count: ";
-
         private List<string> imagesURLSList;
         private string inputURL;
 
@@ -70,7 +66,7 @@ namespace Webscraper
             }
         }
 
-        private void ListBox1_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
+        private void ListBox1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Control && e.KeyCode == Keys.C)
             {
@@ -94,8 +90,7 @@ namespace Webscraper
             if (selectedURLS == null || selectedURLS.Count() == 0)
             {
                 selectedURLS = listBox1.Items.Cast<string>().Select(s => s.Replace("\n", "").Replace("\r", ""));
-            } //TODO: URL:erna kan bli felformatterade sannolikt pga IEnumerable<string>.Cast funktionen. Måste buggfixas!
-
+            }
 
             DialogResult result = folderBrowserDialog1.ShowDialog(this);
             groupBox1.Enabled = false;
@@ -110,7 +105,8 @@ namespace Webscraper
 
                 string path = folderBrowserDialog1.SelectedPath;
 
-                List<Task> downloadFileTasks = new List<Task>(); // lista med alla tasks som ska ladda ner bilder askynkront
+                //A list with all tasks to be downloaded asynchronous 
+                List<Task> downloadFileTasks = new List<Task>(); 
 
                 for (int i = 0; i < selectedURLS.Count(); i++)
                 {
@@ -118,37 +114,38 @@ namespace Webscraper
 
                     var wc = new WebClient();
                     {
+                        //Finds the image format with regex
                         Match formatMatch = Regex.Match(imageURL, @"\.(bmp|png|gif|jpg|jpeg)",
-                            RegexOptions.IgnoreCase); // hitta bildformatet med regex.
+                            RegexOptions.IgnoreCase);
 
                         if (formatMatch.Success)
                         {
                             string fileNameWOExt;
                             int counter = 1;
-                            string[] fileNamesWOExtensions = Directory.GetFiles(path)
-                                .Select(s => Path.GetFileNameWithoutExtension(s)).ToArray(); // hämtar alla filnamn utan format i destinationsmappen.
 
+                            // Gets all the filenames without without filextension in the destination folder
+                            string[] fileNamesWOExtensions = Directory.GetFiles(path).Select(s => Path.GetFileNameWithoutExtension(s)).ToArray();
                             do
                             {
                                 fileNameWOExt = $"img{i + counter}";
                                 counter++;
                             } while (Array.Exists(fileNamesWOExtensions, s => s.Equals(fileNameWOExt, StringComparison.InvariantCultureIgnoreCase)));
-                            
+
                             Task task;
                             try
                             {
-                                task = wc.DownloadFileTaskAsync(imageURL, $"{path}\\{fileNameWOExt}{formatMatch.Value}"); // ladda ner bildfilen asynkront.
-
+                                //Downloads the picture asynchronously  
+                                task = wc.DownloadFileTaskAsync(imageURL, $"{path}\\{fileNameWOExt}{formatMatch.Value}");
                                 await task;
                                 downloadFileTasks.Add(task);
                             }
-                            catch (Exception)
+                            catch (Exception exc)
                             {
-                                
+                                MessageBox.Show(exc.Message, "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
                         }
                         progressBar1.PerformStep();
-                        label2.Text = $"Downloading images ({i + 1} of {selectedURLS.Count()}";
+                        label2.Text = $"Downloading images ({i + 1} of {selectedURLS.Count()})";
                     }
                 }
                 Task.WaitAll(downloadFileTasks.ToArray());
@@ -156,7 +153,7 @@ namespace Webscraper
                 label2.Text = "Progress bar:";
                 progressBar1.Value = 0;
 
-                MessageBox.Show("Done downloading!");  
+                MessageBox.Show("Done downloading!");
             }
 
             groupBox1.Enabled = true;
